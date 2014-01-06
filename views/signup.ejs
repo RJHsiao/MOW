@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="utf-8">
+	<title>MOW: Meeting On Web</title>
+	<link rel="stylesheet" href="http://netdna.bootstrapcdn.com/bootstrap/3.0.0/css/bootstrap.min.css">
+	<link rel="stylesheet" href="http://netdna.bootstrapcdn.com/bootstrap/3.0.0/css/bootstrap-theme.min.css">
+	<link rel="stylesheet" href="/stylesheets/base.css">
+</head>
+<body>
+	<nav class="navbar navbar-inverse navbar-fixed-top" role="navigation">
+		<div class="container">
+			<!-- Brand and toggle get grouped for better mobile display -->
+			<div class="navbar-header">
+				<button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
+					<span class="sr-only">Toggle navigation</span>
+					<span class="icon-bar"></span>
+					<span class="icon-bar"></span>
+					<span class="icon-bar"></span>
+				</button>
+				<h1 class="navbar-brand panel-title">MOW: Meeting On Web</h1>
+			</div>
+			<!-- Collect the nav links, forms, and other content for toggling -->
+			<div class="collapse navbar-collapse">
+				<ul class="nav navbar-nav">
+				</ul>
+				<ul class="nav navbar-nav navbar-right">
+					<li><a href="/"><span class="glyphicon glyphicon-log-in"></span> Log In</a></li>
+				</ul>
+			</div><!--/.navbar-collapse -->
+		</div>
+	</nav>
+	<div class="container">
+		<form class="form-horizontal" action="/signup" method="post" role="form">
+			<div class="form-group">
+				<label for="inputName" class="col-sm-2 control-label">User name</label>
+				<div class="col-sm-7">
+					<input type="text" class="form-control" id="inputName" name="userID" value="<%= userID %>" placeholder="User._Name-" pattern="[A-Za-z][A-Za-z0-9._-]+" required>
+				</div>
+				<span class="help-block hidden">This name is used!</span>
+			</div>
+			<div class="form-group">
+				<label for="inputPasswd" class="col-sm-2 control-label">Password</label>
+				<div class="col-sm-7">
+					<input type="password" class="form-control" id="inputPasswd" name="passwd" placeholder="Password" required>
+				</div>
+			</div>
+			<div class="form-group">
+				<label for="inputPasswdConfirm" class="col-sm-2 control-label">Password Confirm</label>
+				<div class="col-sm-7">
+					<input type="password" class="form-control" id="inputPasswdConfirm" placeholder="Password Confirm" oninput="checkPasswdConfirm(this)" required>
+				</div>
+			</div>
+			<div class="form-group">
+				<label for="inputDisplayName" class="col-sm-2 control-label">Display name</label>
+				<div class="col-sm-7">
+					<input type="text" class="form-control" id="inputDisplayName" name="displayName" value="<%= displayName %>" placeholder="Display Name" required>
+				</div>
+			</div>
+			<div class="form-group">
+				<label for="inputEmail" class="col-sm-2 control-label">Email</label>
+				<div class="col-sm-7">
+					<input type="email" class="form-control" id="inputEmail" name="email" value="<%= email %>" placeholder="Email" required>
+				</div>
+			</div>
+			<div class="form-group">
+				<div class="col-sm-offset-2 col-sm-7">
+					<button type="reset" class="btn btn-default">Reset</button>
+					<button type="submit" class="btn btn-primary"><span class="glyphicon glyphicon-plus"></span> Sign up</button>
+				</div>
+			</div>
+		</form>
+	</div>
+	<!--<footer>none</footer>-->
+	<script src="http://code.jquery.com/jquery-2.0.3.min.js"></script>
+	<script src="http://netdna.bootstrapcdn.com/bootstrap/3.0.0/js/bootstrap.min.js"></script>
+	<script>
+	if (<%= isExist %>) {
+		$('#inputName').parent().parent().addClass('has-error');
+		$('#inputName').parent().parent().children('span').removeClass('hidden');
+	}
+	var checkPasswdConfirm = function(input){
+		if (input.value != document.getElementById('inputPasswd').value) {
+			input.setCustomValidity('Please enter the same password again.');
+		} else {
+			input.setCustomValidity('');
+		}
+	}
+	</script>
+</body>
+</html>

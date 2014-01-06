@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="utf-8">
+	<title>MOW - User Profile</title>
+	<link rel="stylesheet" href="http://netdna.bootstrapcdn.com/bootstrap/3.0.0/css/bootstrap.min.css">
+	<link rel="stylesheet" href="http://netdna.bootstrapcdn.com/bootstrap/3.0.0/css/bootstrap-theme.min.css">
+	<link rel="stylesheet" href="/stylesheets/base.css">
+</head>
+<body>
+	<nav class="navbar navbar-inverse navbar-fixed-top" role="navigation">
+		<div class="container">
+			<!-- Brand and toggle get grouped for better mobile display -->
+			<div class="navbar-header">
+				<button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
+					<span class="sr-only">Toggle navigation</span>
+					<span class="icon-bar"></span>
+					<span class="icon-bar"></span>
+					<span class="icon-bar"></span>
+				</button>
+				<h1 class="navbar-brand panel-title"><a href="/">MOW: Meeting On Web</a></h1>
+			</div>
+			<!-- Collect the nav links, forms, and other content for toggling -->
+			<div class="collapse navbar-collapse">
+				<ul class="nav navbar-nav">
+				</ul>
+				<ul class="nav navbar-nav navbar-right">
+					<li class="dropdown">
+							<a href="#" class="dropdown-toggle" data-toggle="dropdown"><span class="glyphicon glyphicon-user"></span>  <%= displayName %><b class="caret"></b></a>
+						<ul class="dropdown-menu">
+							<li><a href="/user/<%= userID %>"><span class="glyphicon glyphicon-list"></span> Profile</a></li>
+							<li><a href="/logout"><span class="glyphicon glyphicon-log-out"></span> Log Out</a></li>
+						</ul>
+					</li>
+				</ul>
+			</div><!--/.navbar-collapse -->
+		</div>
+	</nav>
+	<div class="container">
+		<h1>Profile</h1>
+		<form class="form-horizontal"role="form">
+			<div class="form-group">
+				<label class="col-sm-2 control-label">User name</label>
+				<div class="col-sm-7">
+					<p class="form-control-static"><%= userID %></p>
+				</div>
+			</div>
+			<div class="form-group">
+				<label for="inputDisplayName" class="col-sm-2 control-label">Display name</label>
+				<div class="col-sm-7">
+					<input type="text" class="form-control hidden" id="inputDisplayName" name="displayName" value="<%= displayName %>" placeholder="Display Name" required>
+					<p class="form-control-static"><%= displayName %></p>
+				</div>
+			</div>
+			<div class="form-group">
+				<label for="inputEmail" class="col-sm-2 control-label">Email</label>
+				<div class="col-sm-7">
+					<input type="email" class="form-control hidden" id="inputEmail" name="email" value="<%= email %>" placeholder="Email" required>
+					<p class="form-control-static"><%= email %></p>
+				</div>
+			</div>
+			<div class="form-group">
+				<label class="col-sm-2 control-label">Last Login Time</label>
+				<div class="col-sm-7">
+					<p class="form-control-static"><%= lastLoginTime %></p>
+				</div>
+			</div>
+			<!--<div class="form-group">
+				<div class="col-sm-offset-2 col-sm-7">
+					<button type="reset" class="btn btn-default">Reset</button>
+					<button type="submit" class="btn btn-primary"><span class="glyphicon glyphicon-plus"></span> Save</button>
+				</div>
+			</div>-->
+		</form>
+	</div>
+	<!--<footer>none</footer>-->
+	<script src="http://code.jquery.com/jquery-2.0.3.min.js"></script>
+	<script src="http://netdna.bootstrapcdn.com/bootstrap/3.0.0/js/bootstrap.min.js"></script>
+	<script>
+	</script>
+</body>
+</html>

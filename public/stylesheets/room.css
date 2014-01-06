@@ -1,0 +1,29 @@
+#room_sidebar .panel { margin-bottom: 5px !important; }
+#room_selfVideo {
+	height: 150px !important;
+	padding: 0px !important;
+}
+#room_textMsgDisplayArea { overflow: auto; }
+.room_textMsg .room_userName {color: darkred;}
+.room_textMsg:nth-child(even) {background-color: gainsboro;}
+.room_textMsg.room_selfTextMsg {background-color: gold !important;}
+#room_members {
+	min-height: 120px;
+	white-space: nowrap;
+	overflow-x: auto;
+}
+video {
+	display: block !important;
+	border: 1px blue solid; // display for developing
+}
+#room_selfVideo video {
+	width: 200px !important;
+	height: 150px !important;
+	margin: auto !important;
+}
+#room_members video {
+	display: inline-block !important;
+	width: 160px !important;
+	height: 120px !important;
+	margin: 2px !important;
+}

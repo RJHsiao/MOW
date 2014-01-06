@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="utf-8">
+	<title>MOW: Meeting On Web</title>
+	<link rel="stylesheet" href="http://netdna.bootstrapcdn.com/bootstrap/3.0.0/css/bootstrap.min.css">
+	<link rel="stylesheet" href="http://netdna.bootstrapcdn.com/bootstrap/3.0.0/css/bootstrap-theme.min.css">
+	<!--<link rel="stylesheet" href="http://netdna.bootstrapcdn.com/font-awesome/4.0.3/css/font-awesome.css">-->
+	<link rel="stylesheet" href="/stylesheets/base.css">
+</head>
+<body>
+	<nav class="navbar navbar-inverse navbar-fixed-top" role="navigation">
+		<div class="container">
+			<!-- Brand and toggle get grouped for better mobile display -->
+			<div class="navbar-header">
+				<button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
+					<span class="sr-only">Toggle navigation</span>
+					<span class="icon-bar"></span>
+					<span class="icon-bar"></span>
+					<span class="icon-bar"></span>
+				</button>
+				<h1 class="navbar-brand panel-title"><a href="/">MOW: Meeting On Web</a></h1>
+			</div>
+			<!-- Collect the nav links, forms, and other content for toggling -->
+			<div class="collapse navbar-collapse">
+				<ul class="nav navbar-nav">
+				</ul>
+				<ul class="nav navbar-nav navbar-right">
+					<% if(isLogin) { %>
+					<li class="dropdown">
+							<a href="#" class="dropdown-toggle" data-toggle="dropdown"><span class="glyphicon glyphicon-user"></span>  <%= displayName %><b class="caret"></b></a>
+						<ul class="dropdown-menu">
+							<li><a href="/user/<%= userID %>"><span class="glyphicon glyphicon-list"></span> Profile</a></li>
+							<li><a href="/logout"><span class="glyphicon glyphicon-log-out"></span> Log Out</a></li>
+						</ul>
+					</li>
+					<% } %>
+				</ul>
+			</div><!--/.navbar-collapse -->
+		</div>
+	</nav>
+	<div class="container">
+		<% if(isLogin) { %>
+		<div class="jumbotron">
+			<h1>Hello, <%= displayName %>!</h1>
+			<p>Welcome to MOW: Meeting On Web</p>
+			<p>
+				MOW is a project that let you and your friend can meeting on web without any plugin. <br>
+				It's basic on HTML5 standard and WebRTC.<br>
+				Please feel free to use it. Looking more information on <a href="https://github.com/RJHsiao/MOW">Github</a>.
+			</p>
+			<div class="row">
+				<form class="col-lg-6" action="/search" method="get" role="form">
+					<div class="input-group input-group-lg">
+						<input type="text" class="form-control" name="room" placeholder="Search room by name." required>
+						<span class="input-group-btn">
+							<button class="btn btn-primary" type="summit"><span class="glyphicon glyphicon-search"></span> Search!</button>
+						</span>
+					</div>
+				</form>
+				<button class="btn btn-danger btn-lg" data-toggle="modal" data-target="#createRoomDlg"><span class="glyphicon glyphicon-plus"></span> Create a new room!</button>
+			</div>
+		</div>
+		<% } %>
+	</div>
+
+	<!-- Modal #loginDlg-->
+	<div class="modal fade" id="loginDlg" tabindex="-1" role="dialog" aria-labelledby="loginDlgLabel" aria-hidden="true" data-backdrop="static" data-keyboard="false">
+		<div class="modal-dialog">
+			<form class="modal-content" action="/" method="post" role="form">
+				<div class="modal-header">
+					<h2 class="modal-title" id="loginDlgLabel">Log In</h2>
+				</div>
+				<div class="modal-body">
+					<% if(isLoginError) { %>
+					<div class="alert alert-danger">User name or password are not correct!</div>
+					<% } %>
+					<div class="form-group">
+						<input class="form-control" type="text" name="userID" value="<%= userID %>" placeholder="User Name" pattern="[A-Za-z][A-Za-z0-9._-]+" required>
+					</div>
+					<div class="form-group">
+						<input class="form-control" type="password" name="passwd" placeholder="Password" required>
+					</div>
+					<!--<div class="checkbox"><label><input type="checkbox"> Remember me</label></div>-->
+				</div>
+				<div class="modal-footer">
+					<a href="/signup" class="btn btn-default"><span class="glyphicon glyphicon-plus"></span> Sign Up</a>
+					<button type="summit" class="btn btn-primary"><span class="glyphicon glyphicon-log-in"></span> Log In</button>
+				</div>
+			</form><!-- /.modal-content -->
+		</div><!-- /.modal-dialog -->
+	</div><!-- /.modal -->
+	<% if(isLogin) { %>
+	<!-- Modal #createRoomDlg-->
+	<div class="modal fade" id="createRoomDlg" tabindex="-1" role="dialog" aria-labelledby="createRoomDlgLabel" aria-hidden="true">
+		<div class="modal-dialog">
+			<form class="modal-content" action="/createroom" method="post" role="form">
+				<div class="modal-header">
+					<button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+					<h2 class="modal-title" id="createRoomDlgLabel">Create Room</h2>
+				</div>
+				<div class="modal-body">
+					<div class="form-group">
+						<input class="form-control" type="text" name="roomName" placeholder="Room Name" required>
+					</div>
+					<div class="form-group">
+						<textarea class="form-control" rows="3" name="description" placeholder="Description"></textarea>
+					</div>
+					<div class="form-group">
+						<input class="form-control" type="password" name="passwd" placeholder="Enter password if needed">
+					</div>
+					<div class="checkbox">
+						<label><input type="checkbox" name="isHidden"> Is hidden?</label>
+					</div>
+				</div>
+				<div class="modal-footer">
+					<button type="reset" class="btn btn-default">Reset</button>
+					<button type="summit" class="btn btn-primary">Create</button>
+				</div>
+			</form><!-- /.modal-content -->
+		</div><!-- /.modal-dialog -->
+	</div><!-- /.modal -->
+	<% } %>
+	<!--<footer>none</footer>-->
+	<script src="http://code.jquery.com/jquery-2.0.3.min.js"></script>
+	<script src="http://netdna.bootstrapcdn.com/bootstrap/3.0.0/js/bootstrap.min.js"></script>
+	<script>
+	if (!<%= isLogin%>) {
+		$('#loginDlg').modal('show');
+	};
+	</script>
+</body>
+</html>
