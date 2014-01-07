@@ -23,19 +23,30 @@ showDisplayAreas = function(selectedDisplayAreas) {
 }
 
 /* Work about showing Webcam videos */
-//var room = location.search && location.search.split('?')[1];
-var room_id = "mow_" + room.id;
-var webrtcSessionID;
 var webrtc = new SimpleWebRTC({
 	localVideoEl: 'room_selfVideo',
 	remoteVideosEl: 'room_members',
 	autoRequestMedia: true,
 	log: true
 });
+
 webrtc.on('readyToCall', function () {
-	webrtc.joinRoom(room_id);
-	webrtcSessionID = webrtc.connection.socket.sessionid;
-	console.log(webrtcSessionID);
+	webrtc.joinRoom("mow_" + room.id);
+	myself.webrtcSessionID = webrtc.connection.socket.sessionid;
+	console.log(myself.webrtcSessionID);
+	if (room.speaker == myself.id) {
+		$('#room_speakerWebcamDisplayArea').append($('#room_selfVideo video'))
+	}
+	socket.emit('joinRoom', {user: myself.id, room: room.id});
+});
+
+/* Socket.io proccessing */
+socket.on('sysMsg', function (data) {
+	insertTextMsg('System', data.msg);
+});
+
+socket.on('textMsg', function (data) {
+	insertTextMsg(data.user, data.msg);
 });
 
 /* Work about showing drawing Canvas */
@@ -208,9 +219,10 @@ $('#room_setYoutubePlayer').on('show.bs.modal', function () {
 });
 
 /* Work about text messages */
-function insertTextMsg (sender, textMsg) {
+insertTextMsg = function (sender, textMsg) {
 	extraClass = "";
-	if (sender == "Admin") { extraClass += " room_selfTextMsg"; }
+	if (sender == "System") { extraClass += " room_sysMsg"; }
+	if (sender == myself.id) { extraClass += " room_selfTextMsg"; }
 	$('#room_textMsgDisplayArea ul').append(
 		"<li class=\"thumbnail room_textMsg" + extraClass + "\">" + 
 		"<span class=\"room_userName\">" + sender + "</span>: " + textMsg + 
@@ -220,8 +232,9 @@ function insertTextMsg (sender, textMsg) {
 }
 
 $('#room_sendTextMsg').click(function() {
-	insertTextMsg("Admin", $('#room_inputTextMsg').val());
+	insertTextMsg(myself.id, $('#room_inputTextMsg').val());
 	// Do something for Send msg to server
+	socket.emit('textMsg', {user: myself.id, room: room.id, msg: $('#room_inputTextMsg').val()});
 	$('#room_inputTextMsg').val("");
 	//console.log("sending message..." + $('#room_inputTextMsg').val());
 });

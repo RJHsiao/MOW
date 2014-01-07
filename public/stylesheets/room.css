@@ -7,6 +7,7 @@
 .room_textMsg .room_userName {color: darkred;}
 .room_textMsg:nth-child(even) {background-color: gainsboro;}
 .room_textMsg.room_selfTextMsg {background-color: gold !important;}
+.room_textMsg.room_sysMsg {background-color: pink !important;}
 #room_members {
 	min-height: 120px;
 	white-space: nowrap;

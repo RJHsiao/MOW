@@ -62,7 +62,6 @@
 		<div class="thumbnail col-md-8 col-xs-12" id="room_main">
 			<!-- Webcam Video -->
 			<div id="room_speakerWebcamDisplayArea">Webcam Displayer
-				<video></video>
 			</div>
 			<!-- Drawing Canvas -->
 			<div class="hidden" id="room_drawingCanvasDisplayArea">
@@ -142,6 +141,7 @@
 			<div class="panel panel-default" id="room_textMsgPanel">
 				<div class="panel-heading"><h2 class="panel-title">Text Messages</h2></div>
 				<div class="panel-body" id="room_textMsgDisplayArea"><ul style="padding: 0px;">
+					<!-- fake chat data -->
 					<li class="thumbnail room_textMsg"><span class="room_userName">User 1</span>: test123</li>
 					<li class="thumbnail room_textMsg"><span class="room_userName">User 1</span>: test123</li>
 					<li class="thumbnail room_textMsg room_selfTextMsg"><span class="room_userName">Admin</span>: asdfghjkl</li>
@@ -155,6 +155,7 @@
 					<li class="thumbnail room_textMsg"><span class="room_userName">User 1</span>: test123</li>
 					<li class="thumbnail room_textMsg room_selfTextMsg"><span class="room_userName">Admin</span>: asdfghjkl</li>
 					<li class="thumbnail room_textMsg"><span class="room_userName">User 1</span>: test123</li>
+					<!-- fake chat data end -->
 				</ul></div>
 				<div class="panel-footer input-group">
 					<input type="text" class="form-control" id="room_inputTextMsg" placeholder="Enter youy message">
@@ -291,8 +292,10 @@
 	<script src="https://www.youtube.com/iframe_api"></script>
 	<!-- Load SimpleWebRTC API  -->
 	<script src="http://simplewebrtc.com/latest.js"></script>
-	<!-- Load SimpleWebRTC API  -->
+	<!-- Load socket.io client  -->
+	<script src="/socket.io/socket.io.js"></script>
 	<script>
+	var myself = {id: '<%= userID %>', displayName: '<%= displayName %>'};
 	var room = {
 		id: '<%= room.id %>',
 		admin: '<%= room.admin %>',
@@ -301,6 +304,10 @@
 		youtubeVideoID: '<%= room.youtubeVideoID %>',
 		drawCanvas: '<%= room.drawCanvas %>'
 	};
+	var socket = io.connect('ws://' + location.host);
+	socket.on('news', function (data) {
+		console.log(data);
+	});
 	</script>
 	<script src="/javascripts/room.js"></script>
 </body>

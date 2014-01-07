@@ -7,7 +7,8 @@ var express = require('express')
   , routes = require('./routes')
   , user = require('./routes/user')
   , http = require('http')
-  , path = require('path');
+  , path = require('path')
+  , io = require('socket.io');
 
 var app = express();
 
@@ -44,6 +45,21 @@ app.get('/search', routes.search);
 
 //app.get('/users', user.list);
 
-http.createServer(app).listen(app.get('port'), function(){
+var server = http.createServer(app).listen(app.get('port'), function(){
   console.log('Express server listening on port ' + app.get('port'));
+});
+
+var io = io.listen(server);
+
+io.sockets.on('connection', function (socket) {
+	socket.emit('news', { hello: 'world' });
+	socket.on('joinRoom', function (data) {
+		 console.log('Joint Room #' + data.room);
+		 socket.join(data.room);
+		 socket.broadcast.to(data.room).emit('sysMsg', {msg: 'User @' + data.user + ' join this room'})
+	});
+	socket.on('textMsg', function (data) {
+		console.log('@' + data.user + ' send: "' + data.msg + '"');
+		socket.broadcast.to(data.room).emit('textMsg', {user: data.user, msg: data.msg})
+	});
 });

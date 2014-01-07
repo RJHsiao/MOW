@@ -12,6 +12,7 @@
 		"less-middleware": "*",
 		"mongoskin": "*",
 		"q": "*",
+		"socket.io": "*",
 		"radix64": "*"
 	}
 }
