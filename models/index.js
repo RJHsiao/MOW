@@ -125,7 +125,8 @@ exports.createRoom = Q.denodeify(function(room, callback) {
 			members: [],
 			pdf: '',
 			drawCanvas: '',
-			youtubeVideoID: ''
+			youtubeVideoID: '',
+			displayState: '#room_speakerWebcamDisplayArea'
 		},
 		callback
 	);
@@ -135,6 +136,30 @@ exports.getRoom = Q.denodeify(function(id, callback) {
 	db.collection('rooms').findOne({id: id}, callback);
 });
 
+exports.getRoomForSocket = Q.denodeify(function(id, callback) {
+	db.collection('rooms').findOne({id: id},{name: 0, passwd: 0, description: 0, isHidden: 0, createTime: 0}, callback);
+});
+
 exports.joinRoom = Q.denodeify(function(id, user, callback) {
 	db.collection('rooms').update({id: id}, {$push: {members: user}}, callback);
+});
+
+exports.leaveRoom = Q.denodeify(function(id, userName, callback) {
+	db.collection('rooms').update({id: id}, {$pull: {members: user}}, callback);
+});
+
+exports.search = Q.denodeify(function(keywords, callback) {
+	for (i in keywords) {
+		keywords[i] = {name: new RegExp(keywords[i], 'i')};
+	};
+	db.collection('rooms').find(
+		{$and: keywords, isHidden: false},
+		{id: 1, name: 1, description: 1, passwd: 1}
+	).toArray(function(err, result) {
+		for (i in result) {
+			result[i].isPrivate = result[i].passwd ? true : false;
+			delete result[i].passwd;
+		}
+		callback(err, result);
+	});
 });

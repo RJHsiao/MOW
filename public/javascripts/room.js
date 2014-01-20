@@ -11,15 +11,70 @@ window.onload = function() {
 		$('#room_textMsgPanel .panel-heading').outerHeight(true) - 
 		$('#room_textMsgPanel .panel-footer').outerHeight(true) - 10
 	);
+	/* set Drawing Canvas area size */
+	$('#room_drawingCanvas').width($('#room_main').width());
+	$('#room_drawingCanvas').height($('#room_main').height() - $('#room_drawingCanvasNavBar').outerHeight(true) - 35);
+}
+/* Detect and ask before page reloading or closing or changing */
+window.onbeforeunload = function() {
+	return "";
+}
+window.onunload = function() {
+	socket.emit('leaveRoom', {user: myself, room: room.id});
 }
 
 /* Show selected displayer in room_main and hide otherwise */
-showDisplayAreas = function(selectedDisplayAreas) {
-	//console.log();
+showDisplayArea = function(selectedDisplayArea) {
+	room.displayState = selectedDisplayArea;
 	$('#room_main').children().addClass('hidden');
-	for (i in selectedDisplayAreas) {
-		$(selectedDisplayAreas[i]).removeClass('hidden');
-	};
+	$(selectedDisplayArea).removeClass('hidden');
+	if (selectedDisplayArea == '#room_speakerWebcamDisplayArea') {
+		if ($('#room_speakerWebcamDisplayArea video') != []) {
+			if ($('#room_speakerWebcamDisplayArea video').prop('id')) {
+				$('#room_members').append$('#room_speakerWebcamDisplayArea video');
+				$('#room_members').last[0].play();
+			} else {
+				$('#room_selfVideo').append($('#room_speakerWebcamDisplayArea video'));
+				$('#room_selfVideo video')[0].play();
+			}
+		}
+		if (room.speaker == myself.name) {
+			$('#room_speakerWebcamDisplayArea').append($('#room_selfVideo video'));
+			$('#room_speakerWebcamDisplayArea video')[0].play();
+		} else {
+			var speakerWebrtcSID;
+			for (i in room.members){
+				if (room.members[i].name == room.speaker) {
+					speakerWebrtcSID = room.members[i].webrtcSID;
+					break;
+				}
+			}
+			var chkInterval = setInterval(function() {
+				if($('#' + speakerWebrtcSID + '_video_incoming') != []) {
+					$('#room_speakerWebcamDisplayArea').append($('#' + speakerWebrtcSID + '_video_incoming'));
+					$('#room_speakerWebcamDisplayArea video')[0].play();
+					clearInterval(chkInterval);
+				}
+			}, 300);
+		}
+	} else {
+		if ($('#room_speakerWebcamDisplayArea video') != []) {
+			if ($('#room_speakerWebcamDisplayArea video').prop('id')) {
+				$('#room_members').append$('#room_speakerWebcamDisplayArea video');
+				$('#room_members').last[0].play();
+			} else {
+				$('#room_selfVideo').append($('#room_speakerWebcamDisplayArea video'));
+				$('#room_selfVideo video')[0].play();
+			}
+		}
+	}
+}
+
+var changeAuthOpUIStatus = function() {
+	if (room.admin == myself.name) $('.admin-ctrl').removeClass('hidden');
+	else $('.admin-ctrl').addClass('hidden');
+	if (room.speaker == myself.name) $('.speaker-ctrl').removeClass('hidden');
+	else $('.speaker-ctrl').addClass('hidden');
 }
 
 /* Work about showing Webcam videos */
@@ -32,34 +87,223 @@ var webrtc = new SimpleWebRTC({
 
 webrtc.on('readyToCall', function () {
 	webrtc.joinRoom("mow_" + room.id);
-	myself.webrtcSessionID = webrtc.connection.socket.sessionid;
-	console.log(myself.webrtcSessionID);
-	if (room.speaker == myself.id) {
-		$('#room_speakerWebcamDisplayArea').append($('#room_selfVideo video'))
-	}
-	socket.emit('joinRoom', {user: myself.id, room: room.id});
+	myself.webrtcSID = webrtc.connection.socket.sessionid;
+	//console.log(myself.webrtcSID); //////
+	socket.emit('joinRoom', {user: myself, room: room.id});
+	socket.on('joinOK', function(data) {
+		room.admin = data.admin;
+		room.speaker = data.speaker;
+		room.members = data.members;
+		room.pdf = data.pdf;
+		room.youtubeVideoID = data.youtubeVideoID;
+		room.drawCanvas = data.drawCanvas;
+		room.displayState = data.displayState
+		for (i in room.members) {
+			user = room.members[i];
+			$('#room_membersList').append('<li><a href="/user/' + user.name + '" target="_blank">' + user.displayName + '</a></li>');
+		}
+		showDisplayArea(room.displayState);
+		changeAuthOpUIStatus();
+	});
 });
 
 /* Socket.io proccessing */
-socket.on('sysMsg', function (data) {
-	insertTextMsg('System', data.msg);
+socket.on('addUser', function (user) {
+	room.members.push(user);
+	$('#room_membersList').append('<li id="user_list_' + user.name + '"><a href="/user/' + user.name + '" target="_blank">' + user.displayName + '</a></li>');
+	insertTextMsg('System', 'User "' + user.displayName + '" joined this room.');
+});
+
+socket.on('removeUser', function (user) {
+	room.members.push(user);
+	$('#room_membersList #user_list_' + user.name).remove();
+	if (user.name == room.speaker && room.displayState == '#room_speakerWebcamDisplayArea') {
+		$('#room_speakerWebcamDisplayArea video').remove();
+		room.speaker = room.admin;
+	}
+	insertTextMsg('System', 'User "' + user.displayName + '" leaved this room.');
 });
 
 socket.on('textMsg', function (data) {
 	insertTextMsg(data.user, data.msg);
 });
 
+/* Work about speaker webcam */
+$('#room_setSpeakerWebcam').click(function() {
+	showDisplayArea('#room_speakerWebcamDisplayArea');
+});
+
 /* Work about showing drawing Canvas */
-var drawingCanvas = document.getElementById('room_drawingCanvas');
-function loadDrawingCanvas(cleanCanvas) {
-	if (cleanCanvas) {};
+var drawingCanvas;
+var drawingCanvasStepCount = -1;
+var drawingCanvasTmpElement;
+var drawingCanvasStyle = 'pencil';
+var pointFrom = {};
+var pointTo = {};
+var isMouseDown = false;
+var svgFileReader = new FileReader();
+$('input[name=room_drawingStyle]').change(function(e) {
+	drawingCanvasStyle = e.target.value;
+});
+
+svgFileReader.onloadend = function() {
+	document.getElementById('room_svgCanvasDataURL').href = svgFileReader.result;
+	console.log(svgFileReader.result);
 	// Do something
-	showDisplayAreas(['#room_drawingCanvasDisplayArea']);
+}
+
+function loadDrawingCanvas(cleanCanvas) {
+	if ('Admin') {
+		if (cleanCanvas) {
+			drawingCanvas.clear();
+			drawingCanvasStepCount = -1;
+		}
+	} else {
+		if (!drawingCanvas) {
+			img = document.createElement('img');
+			img.width = $('#room_drawingCanvas').width();
+			img.height = $('#room_drawingCanvas').height();
+			document.getElementById('room_drawingCanvas').appendChild(img);
+		}
+		if (cleanCanvas) img.src = "";
+	}
+	showDisplayArea('#room_drawingCanvasDisplayArea');
 }
 
 $('#room_loadDrawingCanvas').click(function() {
-	drawingCanvas.width = $('#room_main').width();
-	drawingCanvas.height = $('#room_main').height() - $('#room_drawingCanvasNavBar').outerHeight(true) - 35;
+	if (!drawingCanvas) {
+		drawingCanvas = SVG('room_drawingCanvas');
+		drawingCanvas.node.onmousedown = function(e) {
+			if (e.button == 0) {
+				isMouseDown = true;
+				pointFrom = {x: e.layerX, y: e.layerY};
+				drawingCanvasStepCount++;
+				switch (drawingCanvasStyle) {
+					case "pencil":
+						drawingCanvasTmpElement = drawingCanvas.polyline().attr({
+							id: 'step_' + drawingCanvasStepCount,
+							points: pointFrom.x + ',' + pointFrom.y + ' ' + pointFrom.x + ',' + pointFrom.y,
+							stroke: $('#room_drawingColor').val(),
+							'stroke-width': 2,
+							fill: 'none'
+						});
+						break;
+					case "line":
+						drawingCanvasTmpElement = drawingCanvas.line().attr({
+							id: 'step_' + drawingCanvasStepCount,
+							x1: pointFrom.x,
+							y1: pointFrom.y,
+							x2: pointFrom.x,
+							y2: pointFrom.y,
+							stroke: $('#room_drawingColor').val(),
+							'stroke-width': 2
+						});
+						break;
+					case "rect":
+						drawingCanvasTmpElement = drawingCanvas.rect().attr({
+							id: 'step_' + drawingCanvasStepCount,
+							x: pointFrom.x,
+							y: pointFrom.y,
+							width: 0,
+							height: 0,
+							stroke: 'none',
+							fill: $('#room_drawingColor').val()
+						});
+						break;
+					case "rect_o":
+						drawingCanvasTmpElement = drawingCanvas.rect().attr({
+							id: 'step_' + drawingCanvasStepCount,
+							x: pointFrom.x,
+							y: pointFrom.y,
+							width: 0,
+							height: 0,
+							stroke: $('#room_drawingColor').val(),
+							'stroke-width': 2,
+							fill: 'none'
+						});
+						break;
+					case "ellipse":
+						drawingCanvasTmpElement = drawingCanvas.ellipse().attr({
+							id: 'step_' + drawingCanvasStepCount,
+							cx: pointFrom.x,
+							cy: pointFrom.y,
+							rx: 0,
+							ry: 0,
+							stroke: 'none',
+							fill: $('#room_drawingColor').val()
+						});
+						break;
+					case "ellipse_o":
+						drawingCanvasTmpElement = drawingCanvas.ellipse().attr({
+							id: 'step_' + drawingCanvasStepCount,
+							cx: pointFrom.x,
+							cy: pointFrom.y,
+							rx: 0,
+							ry: 0,
+							stroke: $('#room_drawingColor').val(),
+							'stroke-width': 2,
+							fill: 'none'
+						});
+						break;
+				}
+			}
+		}
+		drawingCanvas.node.onmousemove = function(e) {
+			if (isMouseDown) {
+				pointTo = {x: e.layerX, y: e.layerY};
+				switch (drawingCanvasStyle) {
+					case "pencil":
+						drawingCanvasTmpElement.attr('points', drawingCanvasTmpElement.attr('points') + ' ' + pointTo.x + ',' + pointTo.y);
+						break;
+					case "line":
+						drawingCanvasTmpElement.attr({
+							x2: pointTo.x,
+							y2: pointTo.y,
+						});
+						break;
+					case "rect":
+					case "rect_o":
+						drawingCanvasTmpElement.attr({
+							x: Math.min(pointFrom.x, pointTo.x),
+							y: Math.min(pointFrom.y, pointTo.y),
+							width: Math.abs(pointFrom.x - pointTo.x),
+							height: Math.abs(pointFrom.y - pointTo.y)
+						});
+						break;
+					case "ellipse":
+					case "ellipse_o":
+						drawingCanvasTmpElement.attr({
+							cx: (pointFrom.x + pointTo.x) / 2,
+							cy: (pointFrom.y + pointTo.y) / 2,
+							rx: Math.abs(pointFrom.x - pointTo.x) / 2,
+							ry: Math.abs(pointFrom.y - pointTo.y) / 2
+						});
+						break;
+				}
+			}
+		}
+		drawingCanvas.node.onmouseup = function(e) {
+			isMouseDown = false;
+			svgFileReader.readAsDataURL((new Blob(
+				[(new XMLSerializer).serializeToString(drawingCanvas.node)],
+				{type: 'image/svg+xml;charset=utf-8'}
+			)));
+		}
+		$('#room_drawingCanvasUndo').click(function() {
+			if (drawingCanvasStepCount >= 0) {
+				SVG.get('step_' + drawingCanvasStepCount).remove();
+				drawingCanvasStepCount--;
+				svgFileReader.readAsDataURL((new Blob(
+					[(new XMLSerializer).serializeToString(drawingCanvas.node)],
+					{type: 'image/svg+xml;charset=utf-8'}
+				)));
+			}
+		});
+		$('#room_drawingCanvasClean').click(function() {
+			// Do something
+			loadDrawingCanvas(true);
+		});
+	}
 	// Do something
 	loadDrawingCanvas($('#room_cleanCanvas').prop('checked'));
 	$('#room_setDrawingCanvas').modal('hide');
@@ -131,7 +375,7 @@ $('#room_getPdfNstPage').click(function() {
 });
 
 function loadPdf(dataURL, filename) {
-	if (filename == "") { filename = "slide.pdf"; };
+	if (filename == "") filename = "slide.pdf" ;
 	$('#room_PDFDataURL').prop('href', dataURL);
 	$('#room_PDFDataURL').prop('download', filename);
 	pdfCanvas.width = $('#room_main').width();
@@ -142,19 +386,19 @@ function loadPdf(dataURL, filename) {
 		document.getElementById('room_loadPdfTotlePages').textContent = pdfDoc.numPages;
 		renderPdfNstPage(pdfPageNum);
 	});
-	showDisplayAreas(['#room_pdfDisplayArea']);
+	showDisplayArea('#room_pdfDisplayArea');
 }
 
 $('#room_loadPDF').click(function() {
 	// ToDo: Check need to load pdf or just show the pdf already load before.
 	pdf = $('#room_inputPDF').get(0).files[0];
-	pdfURL = new FileReader();
-	pdfURL.readAsDataURL(pdf);
+	pdfFileReader = new FileReader();
+	pdfFileReader.readAsDataURL(pdf);
 	// Check PDF file is already loaded before doing anything.
-	pdfURL.onloadend = function() {
-		//console.log(pdfURL.result);
+	pdfFileReader.onloadend = function() {
+		//console.log(pdfFileReader.result);
 		// Do something for sync status
-		loadPdf(pdfURL.result, pdf.name);
+		loadPdf(pdfFileReader.result, pdf.name);
 		$('#room_setPDF').modal('hide');
 	}
 	if (pdf == null) { $('#room_inputPDF').parent().addClass('has-error'); }
@@ -193,7 +437,7 @@ function loadYoutubeVideo(youtubeID, playOnReady) {
 	});
 	$('#room_displayYoutubeURL').val('http://youtu.be/' + youtubeID);
 	$('#room_displayYoutubeURL').click(function(){ this.select(); });
-	showDisplayAreas(['#room_youtubeDisplayArea']);
+	showDisplayArea('#room_youtubeDisplayArea');
 	//console.log("sending message..." + $('#room_inputTextMsg').val());
 }
 
@@ -222,7 +466,7 @@ $('#room_setYoutubePlayer').on('show.bs.modal', function () {
 insertTextMsg = function (sender, textMsg) {
 	extraClass = "";
 	if (sender == "System") { extraClass += " room_sysMsg"; }
-	if (sender == myself.id) { extraClass += " room_selfTextMsg"; }
+	if (sender == myself.name) { extraClass += " room_selfTextMsg"; }
 	$('#room_textMsgDisplayArea ul').append(
 		"<li class=\"thumbnail room_textMsg" + extraClass + "\">" + 
 		"<span class=\"room_userName\">" + sender + "</span>: " + textMsg + 
@@ -232,9 +476,9 @@ insertTextMsg = function (sender, textMsg) {
 }
 
 $('#room_sendTextMsg').click(function() {
-	insertTextMsg(myself.id, $('#room_inputTextMsg').val());
+	insertTextMsg(myself.name, $('#room_inputTextMsg').val());
 	// Do something for Send msg to server
-	socket.emit('textMsg', {user: myself.id, room: room.id, msg: $('#room_inputTextMsg').val()});
+	socket.emit('textMsg', {user: myself.name, room: room.id, msg: $('#room_inputTextMsg').val()});
 	$('#room_inputTextMsg').val("");
 	//console.log("sending message..." + $('#room_inputTextMsg').val());
 });

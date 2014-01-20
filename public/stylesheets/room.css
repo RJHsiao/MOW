@@ -4,6 +4,7 @@
 	padding: 0px !important;
 }
 #room_textMsgDisplayArea { overflow: auto; }
+.room_textMsg { margin: 0px; }
 .room_textMsg .room_userName {color: darkred;}
 .room_textMsg:nth-child(even) {background-color: gainsboro;}
 .room_textMsg.room_selfTextMsg {background-color: gold !important;}
@@ -28,3 +29,9 @@ video {
 	height: 120px !important;
 	margin: 2px !important;
 }
+input[type="color"] {
+	width: 40px;
+	padding-left: 2px;
+	padding-right: 2px;
+}
+#room_drawingCanvas svg { cursor: crosshair; }

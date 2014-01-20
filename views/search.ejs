@@ -2,7 +2,7 @@
 <html>
 <head>
 	<meta charset="utf-8">
-	<title>MOW - User Profile</title>
+	<title>MOW - Search Result: <%= keywords %></title>
 	<link rel="stylesheet" href="//netdna.bootstrapcdn.com/bootstrap/3.0.3/css/bootstrap.min.css">
 	<link rel="stylesheet" href="//netdna.bootstrapcdn.com/bootstrap/3.0.3/css/bootstrap-theme.min.css">
 	<link rel="stylesheet" href="/stylesheets/base.css">
@@ -37,41 +37,24 @@
 		</div>
 	</nav>
 	<div class="container">
-		<h1>Profile</h1>
-		<form class="form-horizontal"role="form">
-			<div class="form-group">
-				<label class="col-sm-2 control-label">User name</label>
-				<div class="col-sm-7">
-					<p class="form-control-static"><%= userID %></p>
-				</div>
-			</div>
-			<div class="form-group">
-				<label for="inputDisplayName" class="col-sm-2 control-label">Display name</label>
-				<div class="col-sm-7">
-					<input type="text" class="form-control hidden" id="inputDisplayName" name="displayName" value="<%= displayName %>" placeholder="Display Name" required>
-					<p class="form-control-static"><%= displayName %></p>
-				</div>
-			</div>
-			<div class="form-group">
-				<label for="inputEmail" class="col-sm-2 control-label">Email</label>
-				<div class="col-sm-7">
-					<input type="email" class="form-control hidden" id="inputEmail" name="email" value="<%= email %>" placeholder="Email" required>
-					<p class="form-control-static"><%= email %></p>
-				</div>
-			</div>
-			<div class="form-group">
-				<label class="col-sm-2 control-label">Last Login Time</label>
-				<div class="col-sm-7">
-					<p class="form-control-static"><%= lastLoginTime %></p>
-				</div>
-			</div>
-			<!--<div class="form-group">
-				<div class="col-sm-offset-2 col-sm-7">
-					<button type="reset" class="btn btn-default">Reset</button>
-					<button type="submit" class="btn btn-primary"><span class="glyphicon glyphicon-plus"></span> Save</button>
-				</div>
-			</div>-->
+		<form class="input-group" action="/search" method="get" role="form">
+			<input type="text" class="form-control" name="room" value="<%= keywords %>" required>
+			<span class="input-group-btn">
+				<button class="btn btn-primary" type="summit"><span class="glyphicon glyphicon-search"></span> Search!</button>
+			</span>
 		</form>
+		<h2>Result</h2>
+		<div class="list-group">
+		<% for (i in rooms) { %>
+			<a href="/room/<%= rooms[i].id %>" class="list-group-item">
+				<h3 class="list-group-item-heading">
+					<%= rooms[i].name %>
+					<% if (rooms[i].isPrivate) { %><span class="glyphicon glyphicon-lock"></span><% } %>
+				</h3>
+				<p class="list-groupitem-text"><%= rooms[i].description %></p>
+			</a>
+		<% } %>
+		</div>
 	</div>
 	<!--<footer>none</footer>-->
 	<script src="//code.jquery.com/jquery-2.0.3.min.js"></script>

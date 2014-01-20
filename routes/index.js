@@ -138,42 +138,39 @@ exports.createRoom = function(req, res) {
 }
 
 exports.joinRoom = function(req, res){
-	if (req.signedCookies.roomID) {
-		res.status(403).set({'refresh': '2; url=/'}).send('You already entered another room!');
-	} else {
-		if (req.signedCookies.userID && req.signedCookies.displayName && req.signedCookies['connect.sid']) {
-			models.getUserIsLogin(req.signedCookies.userID, req.signedCookies['connect.sid']).then(function(result) {
-				if (result) {
-					models.getRoom(req.params.roomID).then(function(result) {
-						if (result) {
-							if (result.passwd) res.render('roomAuth', {roomID: result.id, isAuthError: false});
-							else {
-								user = {name: req.signedCookies.userID, displayName: req.signedCookies.displayName};
-								models.joinRoom(result.id, user).then(function() {
-									result.members.push(user);
-									//res.cookie('roomID', result.id, {signed: true});
-									room = {};
-									for (i in result) {
-										if ( i != 'passwd' && i != '_id') room[i] = result[i];
-									}
-									res.render('room', {
-										userID: req.signedCookies.userID,
-										displayName: req.signedCookies.displayName,
-										room: room
-									});
+	if (req.signedCookies.userID && req.signedCookies.displayName && req.signedCookies['connect.sid']) {
+		models.getUserIsLogin(req.signedCookies.userID, req.signedCookies['connect.sid']).then(function(result) {
+			if (result) {
+				models.getRoom(req.params.roomID).then(function(result) {
+					if (result) {
+						if (result.passwd) res.render('roomAuth', {roomID: result.id, isAuthError: false});
+						else {
+							user = {name: req.signedCookies.userID, displayName: req.signedCookies.displayName};
+							//models.joinRoom(result.id, user).then(function() {
+							//	result.members.push(user);
+								/*room = {};
+								for (i in result) {
+									if ( i != 'passwd' && i != '_id') room[i] = result[i];
+								}*/
+								delete result.passwd;
+								delete result._id;
+								res.render('room', {
+									userID: req.signedCookies.userID,
+									displayName: req.signedCookies.displayName,
+									room: result
 								});
-							}
-						} else {
-							res.status(404).set({'refresh': '2; url=/'}).send('room_id: ' + req.params.roomID + 'is not exist!');
+							//});
 						}
-					});
-				} else {
-					res.status(403).set({'refresh': '2; url=/'}).send('Please Login first!');
-				}
-			});
-		} else {
-			res.status(403).set({'refresh': '2; url=/'}).send('Please Login first!');
-		}
+					} else {
+						res.status(404).set({'refresh': '2; url=/'}).send('room_id: ' + req.params.roomID + 'is not exist!');
+					}
+				});
+			} else {
+				res.status(403).set({'refresh': '2; url=/'}).send('Please Login first!');
+			}
+		});
+	} else {
+		res.status(403).set({'refresh': '2; url=/'}).send('Please Login first!');
 	}
 }
 
@@ -182,19 +179,20 @@ exports.joinRoomWithAuth = function(req, res){
 		if(result) {
 			if (req.body.passwd == result.passwd) {
 				user = {name: req.signedCookies.userID, displayName: req.signedCookies.displayName};
-				models.joinRoom(result.id, user).then(function() {
-					result.members.push(user);
-					//res.cookie('roomID', result.id, {signed: true});
-					room = {};
+				//models.joinRoom(result.id, user).then(function() {
+				//	result.members.push(user);
+					/*room = {};
 					for (i in result) {
 						if ( i != 'passwd' && i != '_id') room[i] = result[i];
-					}
+					}*/
+					delete result.passwd;
+					delete result._id;
 					res.render('room', {
 						userID: req.signedCookies.userID,
 						displayName: req.signedCookies.displayName,
-						room: room
+						room: result
 					});
-				});
+				//});
 			} else {
 				res.render('roomAuth', {roomID: result.id, isAuthError: true});
 			}
@@ -205,5 +203,22 @@ exports.joinRoomWithAuth = function(req, res){
 }
 
 exports.search = function(req, res){
-	res.send(req.query.room);
+	if (req.signedCookies.userID && req.signedCookies.displayName && req.signedCookies['connect.sid']) {
+		models.getUserIsLogin(req.signedCookies.userID, req.signedCookies['connect.sid']).then(function(result) {
+			if (result) {
+				models.search(req.query.room.split(" ")).then(function(result) {
+					res.render('search', {
+						userID: req.signedCookies.userID,
+						displayName: req.signedCookies.displayName,
+						keywords: req.query.room,
+						rooms: result
+					});
+				});
+			} else {
+				res.status(403).set({'refresh': '2; url=/'}).send('Please Login first!');
+			}
+		});
+	} else {
+		res.status(403).set({'refresh': '2; url=/'}).send('Please Login first!');
+	}
 }

@@ -3,9 +3,9 @@
 <head>
 	<meta charset="utf-8">
 	<title>MOW - <%= room.name %></title>
-	<link rel="stylesheet" href="http://netdna.bootstrapcdn.com/bootstrap/3.0.0/css/bootstrap.min.css">
-	<link rel="stylesheet" href="http://netdna.bootstrapcdn.com/bootstrap/3.0.0/css/bootstrap-theme.min.css">
-	<link rel="stylesheet" href="http://netdna.bootstrapcdn.com/font-awesome/4.0.3/css/font-awesome.css">
+	<link rel="stylesheet" href="//netdna.bootstrapcdn.com/bootstrap/3.0.3/css/bootstrap.min.css">
+	<link rel="stylesheet" href="//netdna.bootstrapcdn.com/bootstrap/3.0.3/css/bootstrap-theme.min.css">
+	<link rel="stylesheet" href="//netdna.bootstrapcdn.com/font-awesome/4.0.3/css/font-awesome.css">
 	<link rel="stylesheet" href="/stylesheets/base.css">
 	<link rel="stylesheet" href="/stylesheets/room.css">
 </head>
@@ -27,23 +27,22 @@
 			<div class="collapse navbar-collapse">
 				<ul class="nav navbar-nav"></ul>
 				<ul class="nav navbar-nav navbar-right">
-					<!-- <li><button type="button" class="btn btn-danger navbar-btn"><span class="glyphicon glyphicon-log-out"></span> Left this room</button></li>-->
 					<li class="dropdown">
 						<a href="#" class="dropdown-toggle" data-toggle="dropdown"><span class="glyphicon glyphicon-cog"></span><!-- Room Setting --><b class="caret"></b></a>
 						<ul class="dropdown-menu">
 							<li><a href="#" data-toggle="modal" data-target="#room_info"><span class="glyphicon glyphicon-info-sign"></span> Room Information</a></li>
 							<li class="divider speaker-ctrl"></li>
-							<li class="speaker-ctrl"><a href="#"><span class="glyphicon glyphicon-facetime-video"></span> Display Webcam video</a></li>
+							<li class="speaker-ctrl"><a href="#" id="room_setSpeakerWebcam"><span class="glyphicon glyphicon-facetime-video"></span> Display Webcam video</a></li>
 							<li class="speaker-ctrl"><a href="#" data-toggle="modal" data-target="#room_setPDF"><span class="glyphicon glyphicon-file"></span> Display PDF Slide</a></li>
 							<li class="speaker-ctrl"><a href="#" data-toggle="modal" data-target="#room_setDrawingCanvas"><span class="glyphicon glyphicon-pencil"></span> Display Canvas</a></li>
 							<li class="speaker-ctrl"><a href="#" data-toggle="modal" data-target="#room_setYoutubePlayer"><span class="fa fa-youtube-play"></span> Display YouTube video</a></li>
 							<li class="divider admin-ctrl"></li>
-							<li class="admin-ctrl"><a href="#"><span class="glyphicon glyphicon-tower"></span> Change Administrator</a></li>
-							<li class="admin-ctrl"><a href="#"><span class="glyphicon glyphicon-bullhorn"></span> Change Speaker</a></li>
-							<li class="admin-ctrl"><a href="#"><span class="glyphicon glyphicon-ban-circle"></span> Kick Somebody</a></li>
+							<li class="admin-ctrl"><a href="#" data-toggle="modal" data-target="#room_setAdmin"><span class="glyphicon glyphicon-tower"></span> Change Administrator</a></li>
+							<li class="admin-ctrl"><a href="#" data-toggle="modal" data-target="#room_setSpeaker"><span class="glyphicon glyphicon-bullhorn"></span> Change Speaker</a></li>
+							<!--<li class="admin-ctrl"><a href=""><span class="glyphicon glyphicon-ban-circle"></span> Kick Somebody</a></li>-->
 						</ul>
 					</li>
-					<li><a href="#"><span class="glyphicon glyphicon-off"></span> Left this room</a></li>
+					<li><a href="/"><span class="glyphicon glyphicon-off"></span> Left this room</a></li>
 					<li class="dropdown">
 							<a href="#" class="dropdown-toggle" data-toggle="dropdown"><span class="glyphicon glyphicon-user"></span> <%= displayName %><b class="caret"></b></a>
 						<ul class="dropdown-menu">
@@ -61,43 +60,44 @@
 		<!-- Main container -->
 		<div class="thumbnail col-md-8 col-xs-12" id="room_main">
 			<!-- Webcam Video -->
-			<div id="room_speakerWebcamDisplayArea">Webcam Displayer
-			</div>
+			<div id="room_speakerWebcamDisplayArea"></div>
 			<!-- Drawing Canvas -->
 			<div class="hidden" id="room_drawingCanvasDisplayArea">
 				<div>
 					<div class="btn-toolbar form-inline"  style="margin-bottom: 5px;" id="room_drawingCanvasNavBar">
 						<div class="btn-group">
+							<a href="" class="btn btn-default" id="room_svgCanvasDataURL" title="Download SVG Canvas" download="canvas.svg"><span class="glyphicon glyphicon-download-alt"></span></a>
 							<button type="button" class="btn btn-default" id="room_drawingCanvasUndo"><span class="fa fa-undo"></span></button>
-							<button type="button" class="btn btn-default" id="room_drawingCanvasRedo"><span class="fa fa-repeat"></span></button>
 						</div>
-						<div class="btn-group"  data-toggle="buttons">
-							<label class="btn btn-default">
-								<input type="radio" name="room_drawingStyle" id="room_drawingPencil"><span class="fa fa-pencil"></span>
+						<div class="btn-group" id="room_drawingStyle" data-toggle="buttons">
+							<label class="btn btn-default active">
+								<input type="radio" name="room_drawingStyle" id="room_drawingPencil" value="pencil"><span class="fa fa-pencil"></span>
 							</label>
 							<label class="btn btn-default">
-								<input type="radio" name="room_drawingStyle" id="room_drawingRectangle"><span class="fa fa-square"></span>
+								<input type="radio" name="room_drawingStyle" id="room_drawingLine" value="line">／
 							</label>
 							<label class="btn btn-default">
-								<input type="radio" name="room_drawingStyle" id="room_drawingRectangleO"><span class="fa fa-square-o"></span>
+								<input type="radio" name="room_drawingStyle" id="room_drawingRectangle" value="rect"><span class="fa fa-square"></span>
 							</label>
 							<label class="btn btn-default">
-								<input type="radio" name="room_drawingStyle" id="room_drawingCircle"><span class="fa fa-circle"></span>
+								<input type="radio" name="room_drawingStyle" id="room_drawingRectangleO" value="rect_o"><span class="fa fa-square-o"></span>
 							</label>
 							<label class="btn btn-default">
-								<input type="radio" name="room_drawingStyle" id="room_drawingCircleO"><span class="fa fa-circle-o"></span>
+								<input type="radio" name="room_drawingStyle" id="room_drawingEllipse" value="ellipse"><span class="fa fa-circle"></span>
 							</label>
 							<label class="btn btn-default">
-								<input type="radio" name="room_drawingStyle" id="room_drawingLine">／
+								<input type="radio" name="room_drawingStyle" id="room_drawingEllipseO" value="ellipse_o"><span class="fa fa-circle-o"></span>
 							</label>
+						</div>
+						<div class="btn-group">
+							<input type="color" class="form-control" name="room_drawingColor" id="room_drawingColor">
 						</div>
 						<div class="btn-group">
 							<button type="button" class="btn btn-default" id="room_drawingCanvasClean"><span class="fa fa-trash-o"></span></button>
 						</div>
 					</div>
 				</div>
-				<canvas style="border: 1px solid gray;" id="room_drawingCanvas"></canvas>
-				<div>Drawing Canvas Displayer</div>
+				<div style="border: 1px solid gray;" id="room_drawingCanvas"><img src=""></div>
 			</div>
 			<!-- PDF Slide -->
 			<div class="hidden" id="room_pdfDisplayArea">
@@ -140,23 +140,9 @@
 			</div>
 			<div class="panel panel-default" id="room_textMsgPanel">
 				<div class="panel-heading"><h2 class="panel-title">Text Messages</h2></div>
-				<div class="panel-body" id="room_textMsgDisplayArea"><ul style="padding: 0px;">
-					<!-- fake chat data -->
-					<li class="thumbnail room_textMsg"><span class="room_userName">User 1</span>: test123</li>
-					<li class="thumbnail room_textMsg"><span class="room_userName">User 1</span>: test123</li>
-					<li class="thumbnail room_textMsg room_selfTextMsg"><span class="room_userName">Admin</span>: asdfghjkl</li>
-					<li class="thumbnail room_textMsg"><span class="room_userName">User 1</span>: test123</li>
-					<li class="thumbnail room_textMsg"><span class="room_userName">User 1</span>: test123</li>
-					<li class="thumbnail room_textMsg"><span class="room_userName">User 1</span>: test123</li>
-					<li class="thumbnail room_textMsg room_selfTextMsg"><span class="room_userName">Admin</span>: asdfghjkl</li>
-					<li class="thumbnail room_textMsg"><span class="room_userName">User 1</span>: test123</li>
-					<li class="thumbnail room_textMsg"><span class="room_userName">User 1</span>: test123</li>
-					<li class="thumbnail room_textMsg"><span class="room_userName">User 1</span>: test123</li>
-					<li class="thumbnail room_textMsg"><span class="room_userName">User 1</span>: test123</li>
-					<li class="thumbnail room_textMsg room_selfTextMsg"><span class="room_userName">Admin</span>: asdfghjkl</li>
-					<li class="thumbnail room_textMsg"><span class="room_userName">User 1</span>: test123</li>
-					<!-- fake chat data end -->
-				</ul></div>
+				<div class="panel-body" id="room_textMsgDisplayArea">
+					<ul style="padding: 0px;"></ul>
+				</div>
 				<div class="panel-footer input-group">
 					<input type="text" class="form-control" id="room_inputTextMsg" placeholder="Enter youy message">
 					<span class="input-group-btn"><button class="btn btn-default" id="room_sendTextMsg"><span class="glyphicon glyphicon-send"></span> Send</button></span>
@@ -189,10 +175,8 @@
 					<h3>Speaker</h3>
 					<p><%= room.speaker %></p>
 					<h3>Members</h3>
-					<ul>
-					<% for (i in room.members) { %>
-						<li><a href="/user/<%= room.members[i].name %>"><%= room.members[i].displayName %></a></li>
-					<% } %>
+					<ul id="room_membersList">
+						<!--<li><a href="/user/room.members[i].name">room.members[i].displayName</a></li>-->
 					</ul>
 					<h3>Link</h3>
 					<p><script>document.write(location.toString())</script></p>
@@ -280,22 +264,70 @@
 		</div><!-- /.modal-dialog -->
 	</div><!-- /.modal -->
 
+	<!-- Modal #room_setSpeaker-->
+	<div class="modal fade" id="room_setSpeaker" tabindex="-1" role="dialog" aria-labelledby="setSpeakerLabel" aria-hidden="true">
+		<div class="modal-dialog">
+			<div class="modal-content">
+				<div class="modal-header">
+					<button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+					<h2 class="modal-title" id="setSpeakerLabel">
+						<span class="glyphicon glyphicon-pencil"></span> Change Speaker
+					</h2>
+				</div>
+				<div class="modal-body">
+					<select class="form-control" id="room_selectSpeaker">
+						<option>---- Select a user ----</option>
+					</select>
+				</div>
+				<div class="modal-footer">
+					<button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+					<button type="button" class="btn btn-primary" id="room_changeSpeaker">Change Speaker</button>
+				</div>
+			</div><!-- /.modal-content -->
+		</div><!-- /.modal-dialog -->
+	</div><!-- /.modal -->
+
+	<!-- Modal #room_setAdmin-->
+	<div class="modal fade" id="room_setAdmin" tabindex="-1" role="dialog" aria-labelledby="setAdminLabel" aria-hidden="true">
+		<div class="modal-dialog">
+			<div class="modal-content">
+				<div class="modal-header">
+					<button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+					<h2 class="modal-title" id="setAdminLabel">
+						<span class="glyphicon glyphicon-pencil"></span> Change Admininistrator
+					</h2>
+				</div>
+				<div class="modal-body">
+					<select class="form-control" id="room_selectAdmin">
+						<option>---- Select a user ----</option>
+					</select>
+				</div>
+				<div class="modal-footer">
+					<button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+					<button type="button" class="btn btn-primary" id="room_changeAdmin">Change Speaker</button>
+				</div>
+			</div><!-- /.modal-content -->
+		</div><!-- /.modal-dialog -->
+	</div><!-- /.modal -->
+
 	<!--<footer>none</footer>-->
 	<!-- Load jQuery -->
-	<script src="http://code.jquery.com/jquery-2.0.3.min.js"></script>
+	<script src="//code.jquery.com/jquery-2.0.3.min.js"></script>
 	<!-- Load Bootstrap -->
-	<script src="http://netdna.bootstrapcdn.com/bootstrap/3.0.0/js/bootstrap.min.js"></script>
+	<script src="//netdna.bootstrapcdn.com/bootstrap/3.0.3/js/bootstrap.min.js"></script>
 	<!-- Load PDF.js -->
 	<script src="/javascripts/pdf.js"></script>
 	<script src="/javascripts/compatibility.js"></script>
+	<!-- Load svg.js -->
+	<script src="/javascripts/svg.min.js"></script>
 	<!-- Load YouTube iFrame API  -->
-	<script src="https://www.youtube.com/iframe_api"></script>
+	<script src="//www.youtube.com/iframe_api"></script>
 	<!-- Load SimpleWebRTC API  -->
-	<script src="http://simplewebrtc.com/latest.js"></script>
+	<script src="//simplewebrtc.com/latest.js"></script>
 	<!-- Load socket.io client  -->
 	<script src="/socket.io/socket.io.js"></script>
 	<script>
-	var myself = {id: '<%= userID %>', displayName: '<%= displayName %>'};
+	var myself = {name: '<%= userID %>', displayName: '<%= displayName %>'};
 	var room = {
 		id: '<%= room.id %>',
 		admin: '<%= room.admin %>',
