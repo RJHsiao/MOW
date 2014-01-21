@@ -67,7 +67,7 @@ exports.getUserNames = Q.denodeify(function(name, callback) {
 
 exports.updateUserForLogin = Q.denodeify(function(name, passwd, ip, sid, callback) {
 	db.collection('users').findOne(
-		{name: new RegExp(name, 'i')}, 
+		{name: name,
 		{name: 1, displayName: 1 ,passwd: 1, createTime: 1},
 		function(err, result) {
 			if(result) {
