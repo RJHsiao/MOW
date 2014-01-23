@@ -95,12 +95,14 @@ webrtc.on('readyToCall', function () {
 		room.speaker = data.speaker;
 		room.members = data.members;
 		room.pdf = data.pdf;
-		room.youtubeVideoID = data.youtubeVideoID;
+		room.youtubeVideo = data.youtubeVideo;
 		room.drawCanvas = data.drawCanvas;
 		room.displayState = data.displayState
 		for (i in room.members) {
 			user = room.members[i];
-			$('#room_membersList').append('<li><a href="/user/' + user.name + '" target="_blank">' + user.displayName + '</a></li>');
+			$('#room_membersList').append('<li id="user_list_' + user.name + '"><a href="/user/' + user.name + '" target="_blank">' + user.displayName + '</a></li>');
+			$('#room_selectAdmin').append('<option id="setAdmin_' + user.name + '" value="' + user.name + '">' + user.displayName + '</option>');
+			$('#room_selectSpeaker').append('<option id="setSpeaker_' + user.name + '" value="' + user.name + '">' + user.displayName + '</option>');
 		}
 		showDisplayArea(room.displayState);
 		changeAuthOpUIStatus();
@@ -111,17 +113,55 @@ webrtc.on('readyToCall', function () {
 socket.on('addUser', function (user) {
 	room.members.push(user);
 	$('#room_membersList').append('<li id="user_list_' + user.name + '"><a href="/user/' + user.name + '" target="_blank">' + user.displayName + '</a></li>');
+	$('#room_selectAdmin').append('<option id="setAdmin_' + user.name + '" value="' + user.name + '">' + user.displayName + '</option>');
+	$('#room_selectSpeaker').append('<option id="setSpeaker_' + user.name + '" value="' + user.name + '">' + user.displayName + '</option>');
 	insertTextMsg('System', 'User "' + user.displayName + '" joined this room.');
 });
 
 socket.on('removeUser', function (user) {
 	room.members.push(user);
-	$('#room_membersList #user_list_' + user.name).remove();
+	$('#userList_' + user.name).remove();
+	$('#setAdmin_' + user.name).remove();
+	$('#setSpeaker_' + user.name).remove();
 	if (user.name == room.speaker && room.displayState == '#room_speakerWebcamDisplayArea') {
 		$('#room_speakerWebcamDisplayArea video').remove();
 		room.speaker = room.admin;
 	}
 	insertTextMsg('System', 'User "' + user.displayName + '" leaved this room.');
+});
+
+socket.on('setDisplayState', function (data) {
+	switch (data.state) {
+		case '#room_speakerWebcamDisplayArea':
+			showDisplayArea('#room_speakerWebcamDisplayArea');
+			break;
+		case '#room_drawingCanvasDisplayArea':
+			loadDrawingCanvas(data.option);
+			break;
+		case '#room_pdfDisplayArea':
+			loadPdf(data.option.dataurl, data.option.filename);
+			break;
+		case '#room_youtubeDisplayArea':
+			loadYoutubeVideo(data.option.id, data.option.playOnReady);
+			break;
+	}
+});
+
+socket.on('setDrawCanvas', function (drawCanvas) {
+	room.drawCanvas = drawCanvas;
+	insertTextMsg('DBG', '<img src="' + drawCanvas + '"><a href="' + drawCanvas + '" target="_blank">Test</a>');
+	$('#room_drawingCanvas img').prop('src', drawCanvas);
+});
+
+socket.on('setPdfPage', function (pageNum) {
+	pdfPageNum = pageNum;
+	renderPdfNstPage(pageNum);
+});
+
+socket.on('setYoutubeSync', function (data) {
+	youtubePlayer.seekTo(data.time, false);
+	if (data.state == 1) youtubePlayer.playVideo();
+	else youtubePlayer.pauseVideo();
 });
 
 socket.on('textMsg', function (data) {
@@ -130,6 +170,11 @@ socket.on('textMsg', function (data) {
 
 /* Work about speaker webcam */
 $('#room_setSpeakerWebcam').click(function() {
+	socket.emit('setDisplayState', {
+		room: room.id,
+		state: '#room_speakerWebcamDisplayArea',
+		option: ''
+	});
 	showDisplayArea('#room_speakerWebcamDisplayArea');
 });
 
@@ -149,7 +194,7 @@ $('input[name=room_drawingStyle]').change(function(e) {
 svgFileReader.onloadend = function() {
 	document.getElementById('room_svgCanvasDataURL').href = svgFileReader.result;
 	console.log(svgFileReader.result);
-	// Do something
+	socket.emit('setDrawCanvas', {room: room.id, drawCanvas: svgFileReader.result});
 }
 
 function loadDrawingCanvas(cleanCanvas) {
@@ -286,7 +331,7 @@ $('#room_loadDrawingCanvas').click(function() {
 			isMouseDown = false;
 			svgFileReader.readAsDataURL((new Blob(
 				[(new XMLSerializer).serializeToString(drawingCanvas.node)],
-				{type: 'image/svg+xml;charset=utf-8'}
+				{type: 'image/svg+xml'}
 			)));
 		}
 		$('#room_drawingCanvasUndo').click(function() {
@@ -300,11 +345,19 @@ $('#room_loadDrawingCanvas').click(function() {
 			}
 		});
 		$('#room_drawingCanvasClean').click(function() {
-			// Do something
+			socket.emit('setDisplayState', {
+				room: room.id,
+				state: '#room_drawingCanvasDisplayArea',
+				option: true
+			});
 			loadDrawingCanvas(true);
 		});
 	}
-	// Do something
+	socket.emit('setDisplayState', {
+		room: room.id,
+		state: '#room_drawingCanvasDisplayArea',
+		option: $('#room_cleanCanvas').prop('checked')
+	});
 	loadDrawingCanvas($('#room_cleanCanvas').prop('checked'));
 	$('#room_setDrawingCanvas').modal('hide');
 });
@@ -348,29 +401,29 @@ function renderPdfNstPage(num) {
 // binding PDF button-bar's button
 $('#room_loadPdfFirstPage').click(function() {
 	pdfPageNum = 1;
-	// Do something for sync status
+	socket.emit('setPdfPage',{room: room.id, pageNum: pdfPageNum});
 	renderPdfNstPage(pdfPageNum);
 });
 $('#room_loadPdfPrevPage').click(function() {
 	if (pdfPageNum <= 1) return 1;
 	pdfPageNum--;
-	// Do something for sync status
+	socket.emit('setPdfPage',{room: room.id, pageNum: pdfPageNum});
 	renderPdfNstPage(pdfPageNum);
 });
 $('#room_loadPdfNextPage').click(function() {
 	if (pdfPageNum >= pdfDoc.numPages) return 1;
 	pdfPageNum++;
-	// Do something for sync status
+	socket.emit('setPdfPage',{room: room.id, pageNum: pdfPageNum});
 	renderPdfNstPage(pdfPageNum);
 });
 $('#room_loadPdfLastPage').click(function() {
 	pdfPageNum = pdfDoc.numPages;
-	// Do something for sync status
+	socket.emit('setPdfPage',{room: room.id, pageNum: pdfPageNum});
 	renderPdfNstPage(pdfPageNum);
 });
 $('#room_getPdfNstPage').click(function() {
 	pdfPageNum = parseInt($('#room_loadPdfNowPage').val());
-	// Do something for sync status
+	socket.emit('setPdfPage',{room: room.id, pageNum: pdfPageNum});
 	renderPdfNstPage(pdfPageNum);
 });
 
@@ -396,8 +449,11 @@ $('#room_loadPDF').click(function() {
 	pdfFileReader.readAsDataURL(pdf);
 	// Check PDF file is already loaded before doing anything.
 	pdfFileReader.onloadend = function() {
-		//console.log(pdfFileReader.result);
-		// Do something for sync status
+		socket.emit('setDisplayState', {
+			room: room.id,
+			state: '#room_pdfDisplayArea',
+			option: {dataurl: pdfFileReader.result, filename: pdf.name}
+		});
 		loadPdf(pdfFileReader.result, pdf.name);
 		$('#room_setPDF').modal('hide');
 	}
@@ -414,7 +470,11 @@ $('#room_setPDF').on('show.bs.modal', function () {
 var youtubePlayer;
 
 function syncYoutubeStateChange(event) {
-	// Do something for send YouTube video player status to server
+	socket.emit('setYoutubeSync', {
+		room: room.id,
+		state: youtubePlayer.getPlayerState(),
+		time: youtubePlayer.getCurrentTime()
+	});
 	console.log(youtubePlayer.getPlayerState().toString() + ' - ' + youtubePlayer.getCurrentTime().toString());
 }
 
@@ -446,7 +506,11 @@ $('#room_loadYoutubeVideo').click(function() {
 	if (re.test($('#room_inputYoutubeURL').val())) {
 		videoId = $('#room_inputYoutubeURL').val().match(re)[0].slice(-11);
 		//console.log(videoId);
-		// Do something for send YouTube video to server
+		socket.emit('setDisplayState', {
+			room: room.id,
+			state: '#room_youtubeDisplayArea',
+			option: {id: videoId, playOnReady: $('#room_playOnReady').prop('checked')}
+		});
 		loadYoutubeVideo(videoId, $('#room_playOnReady').prop('checked'));
 		$('#room_setYoutubePlayer').modal('hide');
 	} else{

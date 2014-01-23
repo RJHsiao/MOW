@@ -67,7 +67,7 @@ exports.getUserNames = Q.denodeify(function(name, callback) {
 
 exports.updateUserForLogin = Q.denodeify(function(name, passwd, ip, sid, callback) {
 	db.collection('users').findOne(
-		{name: name,
+		{name: name},
 		{name: 1, displayName: 1 ,passwd: 1, createTime: 1},
 		function(err, result) {
 			if(result) {
@@ -123,29 +123,45 @@ exports.createRoom = Q.denodeify(function(room, callback) {
 			isHidden: room.isHidden,
 			createTime: createTime,
 			members: [],
-			pdf: '',
+			pdf: {},
 			drawCanvas: '',
-			youtubeVideoID: '',
+			youtubeVideo: {},
 			displayState: '#room_speakerWebcamDisplayArea'
 		},
 		callback
 	);
 });
 
-exports.getRoom = Q.denodeify(function(id, callback) {
-	db.collection('rooms').findOne({id: id}, callback);
+exports.getRoom = Q.denodeify(function(roomID, callback) {
+	db.collection('rooms').findOne({id: roomID}, callback);
 });
 
-exports.getRoomForSocket = Q.denodeify(function(id, callback) {
-	db.collection('rooms').findOne({id: id},{name: 0, passwd: 0, description: 0, isHidden: 0, createTime: 0}, callback);
+exports.getRoomForSocket = Q.denodeify(function(roomID, callback) {
+	db.collection('rooms').findOne({id: roomID},{name: 0, passwd: 0, description: 0, isHidden: 0, createTime: 0}, callback);
 });
 
-exports.joinRoom = Q.denodeify(function(id, user, callback) {
-	db.collection('rooms').update({id: id}, {$push: {members: user}}, callback);
+exports.joinRoom = Q.denodeify(function(roomID, user, callback) {
+	db.collection('rooms').update({id: roomID}, {$push: {members: user}}, callback);
 });
 
-exports.leaveRoom = Q.denodeify(function(id, userName, callback) {
-	db.collection('rooms').update({id: id}, {$pull: {members: user}}, callback);
+exports.leaveRoom = Q.denodeify(function(roomID, user, callback) {
+	db.collection('rooms').update({id: roomID}, {$pull: {members: user}}, callback);
+});
+
+exports.setRoomDisplayState = Q.denodeify(function(roomID, displayState, callback) {
+	db.collection('rooms').update({id: roomID}, {$set: {displayState: displayState}}, callback);
+});
+
+exports.setDrawCanvas = Q.denodeify(function(roomID, drawCanvas, callback) {
+	db.collection('rooms').update({id: roomID}, {$set: {drawCanvas: drawCanvas}}, callback);
+});
+
+exports.setPdfFile = Q.denodeify(function(roomID, pdf, callback) {
+	db.collection('rooms').update({id: roomID}, {$set: {pdf: pdf}}, callback);
+});
+
+exports.setYoutubeVideo = Q.denodeify(function(roomID, youtubeVideo, callback) {
+	db.collection('rooms').update({id: roomID}, {$set: {youtubeVideo: youtubeVideo}}, callback);
 });
 
 exports.search = Q.denodeify(function(keywords, callback) {
