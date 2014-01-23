@@ -149,7 +149,6 @@ socket.on('setDisplayState', function (data) {
 
 socket.on('setDrawCanvas', function (drawCanvas) {
 	room.drawCanvas = drawCanvas;
-	insertTextMsg('DBG', '<img src="' + drawCanvas + '"><a href="' + drawCanvas + '" target="_blank">Test</a>');
 	$('#room_drawingCanvas img').prop('src', drawCanvas);
 });
 
