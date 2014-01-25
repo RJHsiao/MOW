@@ -158,7 +158,7 @@ socket.on('setPdfPage', function (pageNum) {
 });
 
 socket.on('setYoutubeSync', function (data) {
-	youtubePlayer.seekTo(data.time, false);
+	youtubePlayer.seekTo(data.time, true);
 	if (data.state == 1) youtubePlayer.playVideo();
 	else youtubePlayer.pauseVideo();
 });
@@ -469,7 +469,7 @@ $('#room_setPDF').on('show.bs.modal', function () {
 var youtubePlayer;
 
 function syncYoutubeStateChange(event) {
-	socket.emit('setYoutubeSync', {
+	if (room.speaker == myself.name) socket.emit('setYoutubeSync', {
 		room: room.id,
 		state: youtubePlayer.getPlayerState(),
 		time: youtubePlayer.getCurrentTime()
