@@ -394,35 +394,31 @@ function renderPdfNstPage(num) {
 		viewport = page.getViewport(pdfScale);
 		page.render({canvasContext: PdfContext, viewport: viewport});
 	});
+	if (room.speaker == myself.name) socket.emit('setPdfPage',{room: room.id, pageNum: num});
 	$('#room_loadPdfNowPage').val(pdfPageNum);
 }
 
 // binding PDF button-bar's button
 $('#room_loadPdfFirstPage').click(function() {
 	pdfPageNum = 1;
-	socket.emit('setPdfPage',{room: room.id, pageNum: pdfPageNum});
 	renderPdfNstPage(pdfPageNum);
 });
 $('#room_loadPdfPrevPage').click(function() {
 	if (pdfPageNum <= 1) return 1;
 	pdfPageNum--;
-	socket.emit('setPdfPage',{room: room.id, pageNum: pdfPageNum});
 	renderPdfNstPage(pdfPageNum);
 });
 $('#room_loadPdfNextPage').click(function() {
 	if (pdfPageNum >= pdfDoc.numPages) return 1;
 	pdfPageNum++;
-	socket.emit('setPdfPage',{room: room.id, pageNum: pdfPageNum});
 	renderPdfNstPage(pdfPageNum);
 });
 $('#room_loadPdfLastPage').click(function() {
 	pdfPageNum = pdfDoc.numPages;
-	socket.emit('setPdfPage',{room: room.id, pageNum: pdfPageNum});
 	renderPdfNstPage(pdfPageNum);
 });
 $('#room_getPdfNstPage').click(function() {
 	pdfPageNum = parseInt($('#room_loadPdfNowPage').val());
-	socket.emit('setPdfPage',{room: room.id, pageNum: pdfPageNum});
 	renderPdfNstPage(pdfPageNum);
 });
 
