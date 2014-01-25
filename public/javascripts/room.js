@@ -197,7 +197,7 @@ svgFileReader.onloadend = function() {
 }
 
 function loadDrawingCanvas(cleanCanvas) {
-	if ('Admin') {
+	if (room.speaker == myself.name) {
 		if (cleanCanvas) {
 			drawingCanvas.clear();
 			drawingCanvasStepCount = -1;
@@ -209,7 +209,7 @@ function loadDrawingCanvas(cleanCanvas) {
 			img.height = $('#room_drawingCanvas').height();
 			document.getElementById('room_drawingCanvas').appendChild(img);
 		}
-		if (cleanCanvas) img.src = "";
+		if (cleanCanvas) $('#room_drawingCanvas img').prop('src', '');
 	}
 	showDisplayArea('#room_drawingCanvasDisplayArea');
 }
