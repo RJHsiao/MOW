@@ -112,7 +112,7 @@ webrtc.on('readyToCall', function () {
 /* Socket.io proccessing */
 socket.on('addUser', function (user) {
 	room.members.push(user);
-	$('#room_membersList').append('<li id="user_list_' + user.name + '"><a href="/user/' + user.name + '" target="_blank">' + user.displayName + '</a></li>');
+	$('#room_membersList').append('<li id="userList_' + user.name + '"><a href="/user/' + user.name + '" target="_blank">' + user.displayName + '</a></li>');
 	$('#room_selectAdmin').append('<option id="setAdmin_' + user.name + '" value="' + user.name + '">' + user.displayName + '</option>');
 	$('#room_selectSpeaker').append('<option id="setSpeaker_' + user.name + '" value="' + user.name + '">' + user.displayName + '</option>');
 	insertTextMsg('System', 'User "' + user.displayName + '" joined this room.');
